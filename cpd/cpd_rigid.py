@@ -1,8 +1,9 @@
+#!/usr/bin/env python3
 from __future__ import (absolute_import, division, print_function, unicode_literals)
-from builtins import *
 
 import numpy as np
-from cpd.cpd_p import cpd_p
+import numpy.matlib
+from cpd_p import cpd_p
 
 
 def register_rigid(x, y, w, max_it=150):
@@ -59,3 +60,38 @@ def register_rigid(x, y, w, max_it=150):
         t = np.dot(scale * y, np.transpose(r)) + np.matlib.repmat(np.transpose(ts), m, 1)
         iter = iter + 1
     return t
+
+
+if __name__ == '__main__':
+    import sys
+    import doctest
+    import argparse
+    from pymol import cmd
+    from misc.protein import Coordinates
+    # ### UNCOMMENT FOR LOGGING ####
+    # import os
+    # import logging
+    # logfilename = os.path.splitext(os.path.basename(__file__))[0] + '.log'
+    # logging.basicConfig(filename=logfilename, level=logging.INFO, format='%(asctime)s: %(message)s')
+    # logging.info(f"################ Starting {__file__} ################")
+    # ### ##################### ####
+    # argparse.ArgumentParser(prog=None, usage=None, description=None, epilog=None, parents=[], formatter_class=argparse.HelpFormatter, prefix_chars='-', fromfile_prefix_chars=None, argument_default=None, conflict_handler='error', add_help=True, allow_abbrev=True, exit_on_error=True)
+    parser = argparse.ArgumentParser(description='')
+    # parser.add_argument(name or flags...[, action][, nargs][, const][, default][, type][, choices][, required][, help][, metavar][, dest])
+    parser.add_argument('-p1', '--pdb1')
+    parser.add_argument('-p2', '--pdb2')
+    parser.add_argument('--test', help='Test the code', action='store_true')
+    args = parser.parse_args()
+
+    if args.test:
+        doctest.testmod(optionflags=doctest.ELLIPSIS | doctest.REPORT_ONLY_FIRST_FAILURE)
+        sys.exit()
+
+    cmd.load(args.pdb1, 'pdb1')
+    cmd.load(args.pdb2, 'pdb2')
+    pdb1 = cmd.get_coords('pdb1')
+    pdb2 = cmd.get_coords('pdb2')
+
+    # def register_rigid(x, y, w, max_it=150):
+    coords_opt = register_rigid(pdb1, pdb2, w=0., max_it=150)
+    Coordinates.change(args.pdb2, 'data/out.pdb', coords_opt)

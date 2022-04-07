@@ -37,26 +37,26 @@ def register_nonrigid(x, y, w, lamb=3.0, beta=2.0, max_it=150):
         The transformed version of y. Output shape is [n_points_y, n_dims].
     """
     # Construct G:
-    g = y[:, np.newaxis, :]-y
-    g = g*g
+    g = y[:, np.newaxis, :] - y
+    g = g * g
     g = np.sum(g, 2)
-    g = np.exp(-1.0/(2*beta*beta)*g)
+    g = np.exp(-1.0 / (2 * beta * beta) * g)
     [n, d] = x.shape
     [m, d] = y.shape
     t = y
     # initialize sigma^2
-    sigma2 = (m*np.trace(np.dot(np.transpose(x), x))+n*np.trace(np.dot(np.transpose(y), y)) -
-              2*np.dot(sum(x), np.transpose(sum(y))))/(m*n*d)
+    sigma2 = (m * np.trace(np.dot(np.transpose(x), x)) + n * np.trace(np.dot(np.transpose(y), y)) -
+              2 * np.dot(sum(x), np.transpose(sum(y)))) / (m * n * d)
     iter = 0
     while (iter < max_it) and (sigma2 > 1.0e-5):
         [p1, pt1, px] = cpd_p(x, t, sigma2, w, m, n, d)
         # precompute diag(p)
         dp = scipy.sparse.spdiags(p1.T, 0, m, m)
         # wc is a matrix of coefficients
-        wc = np.dot(np.linalg.inv(dp*g+lamb*sigma2*np.eye(m)), (px-dp*y))
-        t = y+np.dot(g, wc)
+        wc = np.dot(np.linalg.inv(dp * g + lamb * sigma2 * np.eye(m)), (px - dp * y))
+        t = y + np.dot(g, wc)
         Np = np.sum(p1)
-        sigma2 = np.abs((np.sum(x*x*np.matlib.repmat(pt1, 1, d))+np.sum(t*t*np.matlib.repmat(p1, 1, d)) -
-                         2*np.trace(np.dot(px.T, t)))/(Np*d))
-        iter = iter+1
+        sigma2 = np.abs((np.sum(x * x * np.matlib.repmat(pt1, 1, d)) + np.sum(t * t * np.matlib.repmat(p1, 1, d)) -
+                         2 * np.trace(np.dot(px.T, t))) / (Np * d))
+        iter = iter + 1
     return t
